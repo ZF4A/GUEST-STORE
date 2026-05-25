@@ -1,0 +1,218 @@
+@import '@fontsource/playfair-display/400.css';
+@import '@fontsource/playfair-display/500.css';
+@import '@fontsource/playfair-display/600.css';
+@import '@fontsource/playfair-display/700.css';
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/montserrat/600.css';
+@import '@fontsource/montserrat/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 33% 93%;
+    --foreground: 24 40% 8%;
+    --card: 30 43% 96%;
+    --card-foreground: 24 40% 8%;
+    --popover: 30 43% 96%;
+    --popover-foreground: 24 40% 8%;
+    --primary: 39 43% 60%;
+    --primary-foreground: 24 40% 8%;
+    --secondary: 30 20% 52%;
+    --secondary-foreground: 24 40% 8%;
+    --muted: 30 20% 52%;
+    --muted-foreground: 30 20% 45%;
+    --accent: 0 35% 74%;
+    --accent-foreground: 24 40% 8%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 20% 52% / 0.2;
+    --input: 30 20% 52% / 0.2;
+    --ring: 39 43% 60%;
+    --radius: 0.75rem;
+    --warm-cream: #F5EDE4;
+    --nude-blush: #E6C2BF;
+    --champagne-gold: #C9A96E;
+    --deep-espresso: #1C120A;
+    --soft-rose: #D4A5A5;
+    --pale-linen: #FAF6F1;
+    --muted-taupe: #8B7355;
+  }
+
+  .dark {
+    --background: 24 40% 4%;
+    --foreground: 30 25% 88%;
+    --card: 24 30% 13%;
+    --card-foreground: 30 25% 88%;
+    --popover: 24 30% 13%;
+    --popover-foreground: 30 25% 88%;
+    --primary: 39 43% 60%;
+    --primary-foreground: 24 40% 8%;
+    --secondary: 30 25% 20%;
+    --secondary-foreground: 30 25% 88%;
+    --muted: 30 25% 20%;
+    --muted-foreground: 30 15% 55%;
+    --accent: 0 25% 55%;
+    --accent-foreground: 30 25% 88%;
+    --destructive: 0 50% 40%;
+    --destructive-foreground: 30 25% 88%;
+    --border: 24 30% 20%;
+    --input: 24 30% 20%;
+    --ring: 39 43% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201,169,110,0.3) transparent;
+  }
+
+  body {
+    @apply bg-warm-cream text-deep-espresso font-body antialiased transition-colors duration-500;
+  }
+
+  html.dark body {
+    @apply bg-dark-cocoa text-light-cream;
+  }
+
+  ::selection {
+    @apply bg-soft-rose text-deep-espresso;
+  }
+
+  .dark ::selection {
+    @apply bg-blush-dim text-light-cream;
+  }
+}
+
+@layer components {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass-nav {
+    @apply bg-warm-cream/70 backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-deep-espresso/[0.06];
+  }
+
+  .dark .glass-nav {
+    @apply bg-dark-cocoa/70 border-light-cream/[0.06];
+  }
+
+  .glass-panel {
+    @apply bg-pale-linen/85 backdrop-blur-[20px];
+  }
+
+  .dark .glass-panel {
+    @apply bg-warm-brown/85;
+  }
+
+  .gold-gradient-text {
+    background: linear-gradient(135deg, #C9A96E 0%, #E6C2BF 50%, #C9A96E 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gold-line {
+    background: linear-gradient(90deg, transparent, #C9A96E, transparent);
+    background-size: 200% 100%;
+  }
+
+  .sold-stamp {
+    @apply absolute inset-0 flex items-center justify-center pointer-events-none;
+  }
+
+  .sold-stamp span {
+    @apply text-soft-rose/20 font-display text-4xl md:text-5xl font-bold -rotate-12 select-none;
+  }
+
+  .dark .sold-stamp span {
+    @apply text-blush-dim/15;
+  }
+}
+
+@layer utilities {
+  .section-padding {
+    @apply py-[clamp(80px,12vh,160px)];
+  }
+
+  .content-padding {
+    @apply px-[clamp(24px,5vw,80px)];
+  }
+
+  .content-max-width {
+    @apply max-w-[1440px] mx-auto;
+  }
+}
+
+/* 3D scene utilities */
+.scene-3d {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.depth-layer {
+  transform-style: preserve-3d;
+}
+
+/* Animated gold shimmer on headline text-shadow */
+@keyframes gold-depth-pulse {
+  0%, 100% { text-shadow: 2px 3px 0 rgba(201,169,110,0.12), 4px 6px 0 rgba(201,169,110,0.06); }
+  50%       { text-shadow: 3px 5px 0 rgba(201,169,110,0.18), 6px 10px 0 rgba(201,169,110,0.09); }
+}
+
+/* Slow-spin for decorative rings */
+@keyframes slow-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-champagne-gold/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-champagne-gold/50;
+}
+
+/* River scroll for product strips */
+@keyframes river-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.river-track {
+  animation: river-scroll var(--river-duration, 40s) linear infinite;
+}
+.river-track.paused {
+  animation-play-state: paused;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
