@@ -72,15 +72,22 @@
   html {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   * {
     scrollbar-width: thin;
     scrollbar-color: rgba(201,169,110,0.3) transparent;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   body {
     @apply bg-warm-cream text-deep-espresso font-body antialiased transition-colors duration-500;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   html.dark body {
@@ -103,6 +110,7 @@
 
   .glass-nav {
     @apply bg-warm-cream/70 backdrop-blur-[20px] backdrop-saturate-[180%] border-b border-deep-espresso/[0.06];
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
 
   .dark .glass-nav {
@@ -111,6 +119,7 @@
 
   .glass-panel {
     @apply bg-pale-linen/85 backdrop-blur-[20px];
+    -webkit-backdrop-filter: blur(20px);
   }
 
   .dark .glass-panel {

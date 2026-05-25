@@ -33,22 +33,23 @@ document.addEventListener('dragstart', (e) => {
   if ((e.target as HTMLElement).tagName === 'IMG') e.preventDefault();
 });
 
-// Basic devtools detection via size change
-let devtoolsOpen = false;
-const threshold = 160;
-const checkDevTools = () => {
-  const widthDiff  = window.outerWidth  - window.innerWidth;
-  const heightDiff = window.outerHeight - window.innerHeight;
-  if ((widthDiff > threshold || heightDiff > threshold) && !devtoolsOpen) {
-    devtoolsOpen = true;
-    // Blur sensitive content when DevTools opens
-    document.body.style.filter = 'blur(8px)';
-  } else if (widthDiff <= threshold && heightDiff <= threshold && devtoolsOpen) {
-    devtoolsOpen = false;
-    document.body.style.filter = '';
-  }
-};
-setInterval(checkDevTools, 1000);
+// DevTools detection — desktop only (mobile browsers have large chrome that triggers false positives)
+if (!/Mobi|Android|iPhone|iPad|iPod|Opera Mini/i.test(navigator.userAgent)) {
+  let devtoolsOpen = false;
+  const checkDevTools = () => {
+    const widthDiff  = window.outerWidth  - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    const threshold  = 160;
+    if ((widthDiff > threshold || heightDiff > threshold) && !devtoolsOpen) {
+      devtoolsOpen = true;
+      document.body.style.filter = 'blur(8px)';
+    } else if (widthDiff <= threshold && heightDiff <= threshold && devtoolsOpen) {
+      devtoolsOpen = false;
+      document.body.style.filter = '';
+    }
+  };
+  setInterval(checkDevTools, 1000);
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
