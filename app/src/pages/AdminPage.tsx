@@ -6,14 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff,
   Trash2, Package, Plus, LogOut, Check, Pencil, Search,
-  ChevronDown, ImageIcon, X,
+  ChevronDown, ImageIcon, X, PlayCircle,
 } from 'lucide-react';
 import { useProductStore } from '@/stores/productStore';
 import { useAppStore } from '@/stores/appStore';
 import { useSectionStore, SECTION_IDS, type SectionId } from '@/stores/sectionStore';
 import { cn } from '@/lib/utils';
-import { storeImage, isIdb } from '@/lib/imageDb';
+import { storeImage, storeVideo, isIdb } from '@/lib/imageDb';
 import { IdbImage } from '@/components/IdbImage';
+import { IdbMedia } from '@/components/IdbMedia';
 import type { Product } from '@/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -254,6 +255,7 @@ const schema = z.object({
   images:       z.array(z.string()).min(1),
   sizes:        z.array(z.string()).default([]),
   colors:       z.array(z.string()).default([]),
+  videos:       z.array(z.string()).default([]),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -669,6 +671,118 @@ function ImageGalleryManager({
   );
 }
 
+// ─── Video Gallery Manager ────────────────────────────────────────────────────
+
+function VideoGalleryManager({
+  videos, onChange, lang,
+}: {
+  videos: string[];
+  onChange: (v: string[]) => void;
+  lang: 'fr' | 'en';
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const validateAndStore = (file: File): Promise<string | null> =>
+    new Promise((resolve) => {
+      const vid = document.createElement('video');
+      vid.preload = 'metadata';
+      const url = URL.createObjectURL(file);
+      vid.src = url;
+      vid.onloadedmetadata = async () => {
+        URL.revokeObjectURL(url);
+        if (vid.duration > 5.1) {
+          setErr(lang === 'fr' ? `"${file.name}" dépasse 5 secondes` : `"${file.name}" exceeds 5 seconds`);
+          resolve(null);
+          return;
+        }
+        const ref = await storeVideo(file);
+        resolve(ref);
+      };
+      vid.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    });
+
+  const upload = async (files: FileList | File[]) => {
+    const arr = Array.from(files).filter(f => f.type.startsWith('video/'));
+    if (!arr.length) return;
+    setUploading(true); setErr(null);
+    try {
+      const refs: string[] = [];
+      for (const f of arr) { const r = await validateAndStore(f); if (r) refs.push(r); }
+      onChange([...videos, ...refs].slice(0, 5));
+    } finally { setUploading(false); }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <PlayCircle className="w-3.5 h-3.5 text-champagne-gold" />
+        <span className="font-accent text-xs text-champagne-gold uppercase tracking-[0.08em]">
+          {lang === 'fr' ? 'Mini-vidéos (max 5 sec · 5 max)' : 'Mini-videos (max 5 sec · 5 max)'}
+        </span>
+        <span className="text-[10px] text-muted-taupe">mp4 · webm · mov</span>
+      </div>
+
+      {videos.length < 5 && (
+        <div
+          className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-champagne-gold/20 hover:border-champagne-gold/40 p-5 cursor-pointer transition-all"
+          onClick={() => fileRef.current?.click()}
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            multiple
+            className="hidden"
+            onChange={(e) => { if (e.target.files) { upload(e.target.files); e.target.value = ''; } }}
+          />
+          {uploading ? (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 border-2 border-champagne-gold border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-champagne-gold font-accent">
+                {lang === 'fr' ? 'Validation durée...' : 'Checking duration...'}
+              </span>
+            </div>
+          ) : (
+            <>
+              <PlayCircle className="w-7 h-7 text-champagne-gold/40" />
+              <p className="text-xs text-muted-taupe font-body text-center">
+                {lang === 'fr' ? 'Cliquer pour importer une vidéo ≤ 5 secondes' : 'Click to upload a video ≤ 5 seconds'}
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
+      {err && <p className="text-xs text-soft-rose font-body">{err}</p>}
+
+      {videos.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {videos.map((v, i) => (
+            <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-dark-cocoa group">
+              <IdbMedia src={v} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <PlayCircle className="w-6 h-6 text-white" />
+              </div>
+              <button
+                type="button"
+                onClick={() => onChange(videos.filter((_, j) => j !== i))}
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-red-500/80 transition-colors z-10"
+              >
+                <X className="w-3 h-3" />
+              </button>
+              <span className="absolute bottom-1 left-1 text-[9px] font-accent text-white/70 bg-black/50 rounded px-1">
+                {lang === 'fr' ? `vidéo ${i + 1}` : `video ${i + 1}`}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Form Steps ───────────────────────────────────────────────────────────────
 
 function SizePicker({ category, selected, onChange }: { category: string; selected: string[]; onChange: (s: string[]) => void }) {
@@ -851,6 +965,7 @@ function Step3({ form }: { form: any }) {
   const { lang } = useAppStore();
   const ui = ADMIN_UI[lang];
   const images = watch('images') ?? [];
+  const videos = watch('videos') ?? [];
 
   return (
     <div className="space-y-5">
@@ -866,6 +981,13 @@ function Step3({ form }: { form: any }) {
           error={errors.images?.message as string | undefined}
           lang={lang}
           ui={ui}
+        />
+      </div>
+      <div className="mt-4 pt-4 border-t border-champagne-gold/10">
+        <VideoGalleryManager
+          videos={videos}
+          onChange={(v) => setValue('videos', v)}
+          lang={lang}
         />
       </div>
     </div>
@@ -1679,7 +1801,7 @@ export function AdminPage() {
   const navigate = useNavigate();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const form = useForm<FormData>({ resolver: zodResolver(schema) as any, defaultValues: { badges: [], inStock: true, store: 'both', isBestSeller: false, isPromo: false, images: [] } });
+  const form = useForm<FormData>({ resolver: zodResolver(schema) as any, defaultValues: { badges: [], inStock: true, store: 'both', isBestSeller: false, isPromo: false, images: [], videos: [] } });
 
   const handleAuth = () => {
     sessionStorage.setItem('quest-admin', 'true');
@@ -1707,6 +1829,7 @@ export function AdminPage() {
       images: imgs,
       sizes: product.sizes ?? [],
       colors: product.colors ?? [],
+      videos: product.videos ?? [],
     });
     setEditingId(product.id);
     setStep(1);
@@ -1714,7 +1837,7 @@ export function AdminPage() {
   };
 
   const resetToAdd = () => {
-    form.reset({ badges: [], inStock: true, store: 'both', isBestSeller: false, isPromo: false, images: [] });
+    form.reset({ badges: [], inStock: true, store: 'both', isBestSeller: false, isPromo: false, images: [], videos: [] });
     setEditingId(null);
     setStep(1);
     setTab('add');
@@ -1748,6 +1871,7 @@ export function AdminPage() {
       store: data.store,
       sizes: data.sizes?.length ? data.sizes : undefined,
       colors: data.colors?.length ? data.colors : undefined,
+      videos: data.videos?.length ? data.videos : undefined,
     };
 
     if (editingId) {

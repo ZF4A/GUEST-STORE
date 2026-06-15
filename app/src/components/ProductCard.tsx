@@ -4,6 +4,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { cn } from '@/lib/utils';
 import { GoldBadge } from './GoldBadge';
 import { IdbImage } from './IdbImage';
+import { IdbMedia } from './IdbMedia';
 import { useAppStore } from '@/stores/appStore';
 import { translations } from '@/lib/data';
 import type { Product } from '@/types';
@@ -70,6 +71,27 @@ export function ProductCard({ product, onOpen, className }: ProductCardProps) {
           )}
           loading="lazy"
         />
+
+        {/* ── Video hover overlay ── */}
+        {product.videos && product.videos.length > 0 && (
+          <>
+            <div
+              className="absolute inset-0 transition-opacity duration-500 ease-in-out pointer-events-none z-[5]"
+              style={{ opacity: hovered ? 1 : 0 }}
+            >
+              <IdbMedia
+                src={product.videos[0]}
+                className="w-full h-full object-cover"
+                autoPlay muted loop playsInline
+              />
+            </div>
+            {!hovered && (
+              <div className="absolute bottom-10 right-3 z-10 w-5 h-5 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="white" className="w-2.5 h-2.5 ml-0.5"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ── Favourite button — always visible top-left ── */}
         <button

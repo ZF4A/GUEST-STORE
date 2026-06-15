@@ -6,6 +6,7 @@ export interface Product {
   originalPrice?: number;  // set when isPromo — UI shows strikethrough
   image: string;           // always = images[0] (primary)
   images?: string[];       // full gallery, up to 500
+  videos?: string[];       // short video clips (max 5s each)
   category: string;
   badges: ('trending' | 'new' | 'premium' | 'sold')[];
   inStock: boolean;

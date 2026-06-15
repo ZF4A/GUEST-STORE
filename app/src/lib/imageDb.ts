@@ -25,10 +25,29 @@ export async function storeImage(blob: Blob): Promise<string> {
   return `idb://${key}`;
 }
 
+/** Store a video blob and return an `idbv://<uuid>` reference. */
+export async function storeVideo(blob: Blob): Promise<string> {
+  const db  = await open();
+  const key = crypto.randomUUID();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(blob, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror    = () => reject(tx.error);
+  });
+  db.close();
+  return `idbv://${key}`;
+}
+
+export const isIdbVideo = (src: string) => src.startsWith('idbv://');
+
+export const isVideoSrc = (src: string) =>
+  src.startsWith('idbv://') || /\.(mp4|webm|mov|ogg|ogv)(\?|#|$)/i.test(src);
+
 /** Resolve an `idb://<uuid>` reference to a temporary object URL. Caller must revoke it. */
 export async function resolveIdb(ref: string): Promise<string | null> {
-  if (!ref.startsWith('idb://')) return ref;          // plain URL — return as-is
-  const key = ref.slice(6);
+  if (!ref.startsWith('idb://') && !ref.startsWith('idbv://')) return ref;          // plain URL — return as-is
+  const key = ref.startsWith('idbv://') ? ref.slice(7) : ref.slice(6);
   const db  = await open();
   return new Promise((resolve) => {
     const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);

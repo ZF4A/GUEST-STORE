@@ -5,6 +5,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { cn } from '@/lib/utils';
 import { GoldBadge } from './GoldBadge';
 import { IdbImage } from './IdbImage';
+import { IdbMedia } from './IdbMedia';
 import { useAppStore } from '@/stores/appStore';
 import { translations } from '@/lib/data';
 import type { Product } from '@/types';
@@ -16,52 +17,60 @@ const WhatsAppIcon = () => (
 );
 
 function ImageGallery({ product }: { product: Product }) {
-  const gallery = (product.images && product.images.length > 0) ? product.images : [product.image];
+  const images = (product.images && product.images.length > 0) ? product.images : [product.image];
+  const videos = product.videos ?? [];
+  // Unified media: images first, then videos
+  const media = [
+    ...images.map(src => ({ src, isVideo: false })),
+    ...videos.map(src => ({ src, isVideo: true })),
+  ];
   const [activeIdx, setActiveIdx] = useState(0);
-  const hasMultiple = gallery.length > 1;
+  const hasMultiple = media.length > 1;
+  const active = media[activeIdx] ?? media[0];
 
   useEffect(() => { setActiveIdx(0); }, [product.id]);
 
-  const prev = () => setActiveIdx((i) => (i - 1 + gallery.length) % gallery.length);
-  const next = () => setActiveIdx((i) => (i + 1) % gallery.length);
+  const prev = () => setActiveIdx((i) => (i - 1 + media.length) % media.length);
+  const next = () => setActiveIdx((i) => (i + 1) % media.length);
 
   return (
     <div className="flex flex-col h-full">
-      {/* Main image */}
+      {/* Main viewer */}
       <div className="relative flex-1 overflow-hidden rounded-t-3xl md:rounded-l-3xl md:rounded-tr-none bg-warm-cream dark:bg-dark-cocoa">
-        <IdbImage
-          key={activeIdx}
-          src={gallery[activeIdx]}
-          alt={`${product.name.fr} ${activeIdx + 1}`}
-          className="w-full h-full object-cover"
-        />
+        {active.isVideo ? (
+          <IdbMedia
+            key={active.src}
+            src={active.src}
+            className="w-full h-full object-cover"
+            autoPlay muted loop playsInline controls={false}
+          />
+        ) : (
+          <IdbImage
+            key={activeIdx}
+            src={active.src}
+            alt={`${product.name.fr} ${activeIdx + 1}`}
+            className="w-full h-full object-cover"
+          />
+        )}
 
         {/* Badges */}
         {product.badges.length > 0 && (
           <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
-            {product.badges.map((b) => (
-              <GoldBadge key={b} variant={b} />
-            ))}
+            {product.badges.map((b) => <GoldBadge key={b} variant={b} />)}
           </div>
         )}
 
         {/* Arrows */}
         {hasMultiple && (
           <>
-            <button
-              onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors"
-            >
+            <button onClick={prev} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button
-              onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors"
-            >
+            <button onClick={next} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors">
               <ChevronRight className="w-5 h-5" />
             </button>
             <span className="absolute bottom-3 right-3 bg-black/40 text-white text-xs font-accent px-2 py-1 rounded-full">
-              {activeIdx + 1} / {gallery.length}
+              {activeIdx + 1} / {media.length}
             </span>
           </>
         )}
@@ -70,16 +79,25 @@ function ImageGallery({ product }: { product: Product }) {
       {/* Thumbnail strip */}
       {hasMultiple && (
         <div className="flex gap-2 overflow-x-auto p-3 scrollbar-hide">
-          {gallery.map((src, i) => (
+          {media.map((item, i) => (
             <button
               key={i}
               onClick={() => setActiveIdx(i)}
               className={cn(
-                'flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all',
+                'relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all',
                 i === activeIdx ? 'border-champagne-gold' : 'border-transparent opacity-60 hover:opacity-100'
               )}
             >
-              <IdbImage src={src} alt={`thumb ${i + 1}`} className="w-full h-full object-cover" />
+              {item.isVideo ? (
+                <>
+                  <IdbMedia src={item.src} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <svg viewBox="0 0 24 24" fill="white" className="w-4 h-4 drop-shadow ml-0.5"><path d="M8 5v14l11-7z"/></svg>
+                  </div>
+                </>
+              ) : (
+                <IdbImage src={item.src} alt={`thumb ${i + 1}`} className="w-full h-full object-cover" />
+              )}
             </button>
           ))}
         </div>
