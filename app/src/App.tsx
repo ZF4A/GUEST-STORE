@@ -35,13 +35,14 @@ function HomePage() {
   const { lang } = useAppStore();
   const t = translations[lang];
   const { products: allProducts, seed } = useProductStore();
-  const { overrides: sectionOverrides } = useSectionStore();
+  const { overrides: sectionOverrides, load: loadSections } = useSectionStore();
 
   const sec = (id: string, def: { caption: string; headline: string }) =>
     sectionOverrides[id as keyof typeof sectionOverrides] ?? def;
 
-  // Seed static products on first visit
+  // Seed products and load section config from Supabase on first visit
   useEffect(() => { seed(); }, [seed]);
+  useEffect(() => { loadSections(); }, [loadSections]);
 
   const trendingProducts = useMemo(
     () => allProducts.filter((p) => p.badges.includes('trending')),
