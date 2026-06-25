@@ -12,7 +12,8 @@ import { useProductStore } from '@/stores/productStore';
 import { useAppStore } from '@/stores/appStore';
 import { useSectionStore, SECTION_IDS, type SectionId } from '@/stores/sectionStore';
 import { cn } from '@/lib/utils';
-import { storeImage, storeVideo, isIdb } from '@/lib/imageDb';
+import { isIdb } from '@/lib/imageDb';
+import { uploadToStorage } from '@/lib/supabase';
 import { IdbImage } from '@/components/IdbImage';
 import { IdbMedia } from '@/components/IdbMedia';
 import type { Product } from '@/types';
@@ -495,8 +496,7 @@ function ImageGalleryManager({
     try {
       const refs: string[] = [];
       for (const file of fileArr) {
-        // Store the original blob — full HD/4K resolution, no compression
-        const ref = await storeImage(file);
+        const ref = await uploadToStorage(file);
         refs.push(ref);
       }
       onChange([...images, ...refs].slice(0, 500));
@@ -697,7 +697,7 @@ function VideoGalleryManager({
           resolve(null);
           return;
         }
-        const ref = await storeVideo(file);
+        const ref = await uploadToStorage(file);
         resolve(ref);
       };
       vid.onerror = () => { URL.revokeObjectURL(url); resolve(null); };

@@ -59,6 +59,18 @@ export async function resolveIdb(ref: string): Promise<string | null> {
   });
 }
 
+/** Get the raw Blob for an idb:// or idbv:// ref (used for cloud migration). */
+export async function getBlob(ref: string): Promise<Blob | null> {
+  if (!ref.startsWith('idb://') && !ref.startsWith('idbv://')) return null;
+  const key = ref.startsWith('idbv://') ? ref.slice(7) : ref.slice(6);
+  const db  = await open();
+  return new Promise((resolve) => {
+    const req = db.transaction(STORE, 'readonly').objectStore(STORE).get(key);
+    req.onsuccess = () => { db.close(); resolve(req.result ?? null); };
+    req.onerror   = () => { db.close(); resolve(null); };
+  });
+}
+
 /** Delete a stored blob (call when removing an image from a product). */
 export async function deleteIdb(ref: string): Promise<void> {
   if (!ref.startsWith('idb://')) return;
